@@ -109,3 +109,38 @@ public static class MoqExtensions {
   }
 }
 ```
+
+## Fluent Validation
+
+```cs
+public static class CustomValidators
+    {
+        public static IRuleBuilderOptions<T, string> MustBeBase64String<T>(this IRuleBuilder<T, string> ruleBuilder)
+        {
+            return ruleBuilder.Must(x =>
+            {
+                if (string.IsNullOrEmpty(x))
+                {
+                    return false;
+                }
+
+                var buffer = new Span<byte>(new byte[x.Length]);
+                return Convert.TryFromBase64String(x, buffer, out int _);
+            }).WithMessage("Data is not a valid base64 value.");
+        }
+
+        public static IRuleBuilderOptions<T, string> ContentTypeMustBeOneOf<T>(this IRuleBuilder<T, string> ruleBuilder, string[] optionsValues)
+        {
+            return ruleBuilder.Must(x =>
+            {
+                if (string.IsNullOrEmpty(x))
+                {
+                    return false;
+                }
+
+                var byteArray = Convert.FromBase64String(x);
+                return optionsValues.Contains(byteArray.GetFileType().Mime);
+            }).WithMessage("Invalid file type.");
+        }
+    }
+ ```
